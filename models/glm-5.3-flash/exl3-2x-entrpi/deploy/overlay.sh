@@ -18,6 +18,9 @@ done
 # 注意 modelhub 的 glm53/start.sh knobs() 不能再传 GMU，否则两台被同一个值盖掉。
 if [ -n "${MH_GPU_MEM_UTIL:-}" ]; then
   ov_require_fraction "$MH_GPU_MEM_UTIL"
+  # launch 脚本是 `[[ -f "$GLM53_ENV" ]] && . "$GLM53_ENV"` 条件 source：文件不存在（新盒子、kit
+  # install.sh 没生成）时会静默用 kit 默认 0.85，正好违反 head 0.78 / worker 0.90 的硬要求。
+  # 所以不存在就创建（只含 GMU 一行，其余键让 launch 走自己的默认），存在则只改/追加 GMU 行。
   serve_env=${GLM53_ENV:-$HOME/.glm53-serve.env}
   if [ -f "$serve_env" ]; then
     if grep -q '^: "${GMU' "$serve_env"; then
@@ -27,7 +30,11 @@ if [ -n "${MH_GPU_MEM_UTIL:-}" ]; then
     fi
     echo "overlay(glm53): $serve_env  GMU=${MH_GPU_MEM_UTIL} (${MH_ROLE:-?})"
   else
-    echo "overlay(glm53): $serve_env 不存在（kit install.sh 还没跑？），显存占比 ${MH_GPU_MEM_UTIL} 未写入" >&2
+    mkdir -p "$(dirname "$serve_env")"
+    printf '# 由 dgx-spark-multinode deploy/overlay.sh 生成（modelhub 每次 start 前刷新）；kit install.sh 会用完整版覆盖，GMU 行随后再被写回。\n: "${GMU:=%s}"\n' \
+      "$MH_GPU_MEM_UTIL" > "$serve_env"
+    chmod 0644 "$serve_env"
+    echo "overlay(glm53): $serve_env 不存在，已创建并写入 GMU=${MH_GPU_MEM_UTIL} (${MH_ROLE:-?})"
   fi
 fi
 true
