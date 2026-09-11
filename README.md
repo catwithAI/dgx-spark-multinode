@@ -37,6 +37,14 @@ DGX Spark (GB10) 上的大模型部署方案合集：单节点 / 双节点（Con
 | 本仓库 checkout | `/home/ai/dgx-spark-multinode` | modelhub 的 `UPSTREAM_DIR` 指向 `models/<模型>/<方案>/upstream/`（gitignore，放第三方 kit 的 clone） |
 | 非 LLM 服务 | ComfyUI `8188`、bge `30010`、open-webui `30030`、代理 `30020/30021` | 各自固定，不与 8888 冲突 |
 
+**双机显存占比由 modelhub 按角色注入**：GB10 是统一内存，master 还要养 blade 全家桶，所以
+master `0.78`、worker `0.90`（值在 modelhub 的 `fleet.env`）。modelhub 每次 start 前在两台上调
+`scripts/apply-overlay.sh`，并传 `MH_ROLE=master|worker`、`MH_GPU_MEM_UTIL=<占比>`
+（可选再给 `MH_GPU_MEM_UTIL_MASTER/_WORKER`，见 [`scripts/lib-overlay.sh`](scripts/lib-overlay.sh)）；
+各方案 `deploy/overlay.sh` 负责把它写进自己引擎的键（vLLM `--gpu-memory-utilization`、SGLang
+`--mem-fraction-static`、Entrpi `GMU`）。`deploy/` 里不再手写 0.78/0.90，只留占位默认；不传这些变量时
+overlay 不碰显存键。
+
 **配方如何进包**：每个方案目录下
 
 - `deploy/` 是本集群的真源配置（env、compose、`overlay.sh`），进 git；

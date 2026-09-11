@@ -100,6 +100,8 @@ services:
         export CUDAToolkit_ROOT="$${CUDAToolkit_ROOT:-$${CUDA_HOME}}";
         export LD_LIBRARY_PATH="/opt/env/lib:/opt/env/targets/sbsa-linux/lib:$${LD_LIBRARY_PATH:-}";
         SPECULATIVE_CONFIG="{\"method\":\"dspark\",\"num_speculative_tokens\":${MTP_NUM_TOKENS:-5},\"draft_sample_method\":\"probabilistic\"}";
+        GMU="${GPU_MEMORY_UTILIZATION:-}";
+        if [ -z "$$GMU" ]; then if [ "$${NODE_RANK:-0}" = "1" ]; then GMU="${GPU_MEMORY_UTILIZATION_WORKER:-0.90}"; else GMU="${GPU_MEMORY_UTILIZATION_HEAD:-0.78}"; fi; fi;
         exec /opt/env/bin/vllm serve ${DSPARK_MODEL:-/models/DeepSeek-V4-Flash-0731}
         --served-model-name ${SERVED_MODEL_NAME:-deepseek-v4-flash-0731}
         --host ${VLLM_HOST:-127.0.0.1}
@@ -113,7 +115,7 @@ services:
         --max-num-seqs ${MAX_NUM_SEQS:-6}
         --max-num-batched-tokens ${MAX_NUM_BATCHED_TOKENS:-8192}
         --max-cudagraph-capture-size $$(( ${MAX_NUM_SEQS:-6} * (${MTP_NUM_TOKENS:-5} + 1) ))
-        --gpu-memory-utilization ${GPU_MEMORY_UTILIZATION:-0.80}
+        --gpu-memory-utilization "$$GMU"
         --enable-prefix-caching
         --async-scheduling
         --enable-chunked-prefill
