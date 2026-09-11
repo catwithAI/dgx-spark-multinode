@@ -1,0 +1,5 @@
+# 上游 kit 来源。fetch-upstream.sh 读此文件把 upstream/ 拉出来并套上 deploy/ 覆盖层。
+REPO=https://github.com/tonyd2wild/DeepSeek-v4-Flash-0731-DSpark-1M-NVFP4-KV-2x-DGX-Spark
+REF=d728fae
+# 现有盒子上的旧位置（软链过渡；REPO 拉不下来时也可 rsync 这里）
+SEED=ai@192.168.130.8:/home/ai/ds4-dspark-2x/

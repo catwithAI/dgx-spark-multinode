@@ -37,7 +37,19 @@ DGX Spark (GB10) 上的大模型部署方案合集：单节点 / 双节点（Con
 | 本仓库 checkout | `/home/ai/dgx-spark-multinode` | modelhub 的 `UPSTREAM_DIR` 指向 `models/<模型>/<方案>/upstream/`（gitignore，放第三方 kit 的 clone） |
 | 非 LLM 服务 | ComfyUI `8188`、bge `30010`、open-webui `30030`、代理 `30020/30021` | 各自固定，不与 8888 冲突 |
 
-目标机上旧位置（`/srv/models`、`~/ds4-dspark-2x`、`/opt/qwen38-sglang`、`~/gguf` 等）用 [`scripts/migrate-layout.sh`](scripts/migrate-layout.sh) 软链到新位置，先 dry-run 再 `--apply`。
+**配方如何进包**：每个方案目录下
+
+- `deploy/` 是本集群的真源配置（env、compose、`overlay.sh`），进 git；
+- `upstream.lock` 记录第三方 kit 的仓库 + 固定版本，或没有公开仓库时的种子机 rsync 地址；
+- `upstream/` 是 kit 的落地目录（gitignore），由 [`scripts/fetch-upstream.sh`](scripts/fetch-upstream.sh) 按 lock 拉出来，再由 [`scripts/apply-overlay.sh`](scripts/apply-overlay.sh) 把 `deploy/` 覆盖上去。modelhub 每次 start 前都会在 head 和 worker 上重跑 overlay，所以改 `deploy/` 即生效。
+
+盒子侧三个脚本，都默认 dry-run、加 `--apply` 执行：
+
+| 脚本 | 用途 |
+|---|---|
+| `scripts/fetch-upstream.sh` | 新盒子：按 `upstream.lock` 拉所有 kit 并套 overlay |
+| `scripts/migrate-layout.sh` | 现有盒子：旧位置（`/srv/models`、`~/ds4-dspark-2x`、`/opt/qwen38-sglang`、`~/gguf`、`~/launch-glm53-*`）软链到新位置并套 overlay |
+| `scripts/cutover-modelhub.sh` | 切到 modelhub 编排：禁掉 `glm53-supervisor` / `ds4v-*supervisor`，清旧 project 的容器，重套 overlay（端口 8899/8000 → 8888） |
 
 ## 双节点通用入口 (quick-start.sh)
 
@@ -167,7 +179,7 @@ curl http://192.168.130.16:8888/v1/chat/completions \
 dgx-spark-multinode/
 ├── README.md
 ├── fleet.env.example           # 统一约定：权重目录 / 端口 / checkout 位置 / fabric
-├── scripts/migrate-layout.sh   # 目标机旧位置 -> 新约定（软链）
+├── scripts/                    # fetch-upstream / apply-overlay / migrate-layout / cutover-modelhub
 ├── quick-start.sh              # 双节点 NVFP4 TP=2 一键入口
 ├── runtime/                    # quick-start.sh 的容器运行时
 │   ├── docker-compose.yml      # vLLM head + worker 编排
@@ -178,7 +190,7 @@ dgx-spark-multinode/
 ├── models/                     # ── 所有模型部署，按模型名分目录 ──
 │   │                           #    注：这里放的是部署方案，不是权重；
 │   │                           #    权重在目标机的 /home/ai/models/ 下
-│   │                           #    <方案>/upstream/ 放第三方 kit 的 clone（gitignore）
+│   │                           #    <方案>/deploy/ 真源配置 · upstream.lock 上游版本 · upstream/ kit 落地（gitignore）
 │   ├── deepseek-v4-flash/
 │   │   ├── README.md           #    两套方案对比 + 选型
 │   │   ├── vllm-dspark-2x-nvfp4/   # 双节点 vLLM + DSpark，1M 上下文

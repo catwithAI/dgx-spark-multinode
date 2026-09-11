@@ -30,4 +30,4 @@ cd ~/dgx-spark-multinode/models/deepseek-v4-flash/vllm-dspark-2x-vision/upstream
 ./stop-vision.sh
 ```
 
-上游脚本从旧目录迁过来时，检查其中写死的部署目录和 HF cache 路径，改为本目录 `upstream/` 与 `/home/ai/models`。
+`upstream.lock` 指向种子机（66）的 `~/ds4-dspark-2x-vision-src`；`deploy/overlay.sh` 每次 start 前把上游里的 `:8899` 改成 `:8888`。66/67 上原来的 `ds4v-*supervisor` 用根目录 `scripts/cutover-modelhub.sh` 禁掉，只留 rail。
