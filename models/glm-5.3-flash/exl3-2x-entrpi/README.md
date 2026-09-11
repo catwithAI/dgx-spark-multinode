@@ -103,6 +103,8 @@ git clone https://github.com/Entrpi/glm-5.3-flash-exl3-2x-spark
 cd glm-5.3-flash-exl3-2x-spark
 cp <本仓库>/models/glm-5.3-flash/exl3-2x-entrpi/deploy/.env.entrpi .env
 ./install.sh --skip-download        # 权重已就位，别让它再拉一遍 176 GiB
+# kit 的 clone 放在本目录 upstream/（scripts/fetch-upstream.sh 会按 upstream.lock 拉 v2.3-tier1 并把 deploy/.env.entrpi 覆盖成 upstream/.env）
+# ops/install-ops.sh 默认只装 rail；看门狗交给 modelhub，独立部署才加 --with-supervisor
 ```
 
 `install.sh` 会体检两台、拉 ~25 GiB 服务镜像、装启动脚本、先起 worker 再起 head、

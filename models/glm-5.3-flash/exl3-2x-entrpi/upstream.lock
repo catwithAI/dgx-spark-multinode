@@ -1,0 +1,4 @@
+# 上游 kit 来源。deploy/.env.entrpi 会覆盖到 upstream/.env。
+REPO=https://github.com/Entrpi/glm-5.3-flash-exl3-2x-spark
+REF=v2.3-tier1
+SEED=ai@192.168.130.8:/home/ai/glm-5.3-flash-exl3-2x-spark/

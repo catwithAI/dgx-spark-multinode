@@ -1,5 +1,8 @@
 services:
   vllm-dspark:
+    # 固定容器名：modelhub 的 CONTAINERS 按名字查。原来是 compose 按目录名 ds4-dspark-2x 生成的，
+    # 搬到 upstream/ 后 project 会变成 upstream，不写死名字就对不上。
+    container_name: ds4-dspark-2x-vllm-dspark-1
     image: ${DSPARK_VLLM_IMAGE:-vllm-dspark-runtime:dspark-nvfp4-stage-c}
     network_mode: host
     ipc: host
