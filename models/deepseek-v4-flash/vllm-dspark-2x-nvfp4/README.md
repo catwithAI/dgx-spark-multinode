@@ -32,7 +32,8 @@
 | worker / rank 1 | `spark-c915` | `192.168.130.12` | `10.0.0.3` | `--headless` |
 
 - 光口 `enp1s0f1np1`（HCA `rocep1s0f1`，GID index 3），`MASTER_PORT=25000`
-- 部署目录两台都是 `~/ds4-dspark-2x`，HF cache 两台都是 `~/.cache/huggingface`
+- 上游配方 checkout 两台都在 `~/dgx-spark-multinode/models/deepseek-v4-flash/vllm-dspark-2x-nvfp4/upstream/`（gitignore，旧位置 `~/ds4-dspark-2x` 用软链过渡，见根目录 `scripts/migrate-layout.sh`）
+- 权重两台都在 `/home/ai/models/DeepSeek-V4-Flash-0731`（可为指向 HF cache snapshot 的软链）；HF cache 只放 vllm-cache
 - 运行时镜像 `vllm-dspark-runtime:dspark-nvfp4-stage-c`（两台都已 load）
 
 > ⚠️ **光纤 IP 是手工配的，机器重启会丢**。不通时：
@@ -45,8 +46,8 @@
 
 | 项 | 状态 |
 |---|---|
-| `~/ds4-dspark-2x` 检出（上游 `d728fae`） | ✅ 两台都有 |
-| 0731 权重 156 GiB（HF cache） | ✅ 两台都有，已过分片头部校验 |
+| 上游配方检出（`d728fae`）→ `.../vllm-dspark-2x-nvfp4/upstream/` | ✅ 两台都有（旧路径 `~/ds4-dspark-2x`） |
+| 0731 权重 156 GiB → `/home/ai/models/DeepSeek-V4-Flash-0731` | ✅ 两台都有，已过分片头部校验 |
 | `vllm-dspark-runtime:dspark-nvfp4-stage-c` 镜像 | ✅ 两台都有，且与 `recipe/overlay/` 校验一致（Patch 4 已烘进镜像） |
 | `.env.dspark` | ✅ head 上已按本集群改好，见 [`deploy/.env.dspark`](deploy/.env.dspark) |
 | 服务 | ⛔ **当前停着**（无容器、8888 未监听） |
@@ -56,7 +57,7 @@
 全部在 **head（192.168.130.8）** 上执行，脚本会自己 ssh 到 worker 先起 rank 1：
 
 ```bash
-cd ~/ds4-dspark-2x
+cd ~/dgx-spark-multinode/models/deepseek-v4-flash/vllm-dspark-2x-nvfp4/upstream
 ./start-deepseek-v4-flash-dspark.sh      # worker 先起，再起 head，最后跑 smoke
 ./status-deepseek-v4-flash-dspark.sh
 ./logs-deepseek-v4-flash-dspark.sh

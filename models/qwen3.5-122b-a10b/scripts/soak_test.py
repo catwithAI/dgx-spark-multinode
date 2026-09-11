@@ -367,7 +367,7 @@ def parse_duration(s):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--base", default="http://192.168.130.12:30000")
+    p.add_argument("--base", default="http://192.168.130.12:8888")
     p.add_argument("--model", default="qwen3.5-122b-int4")
     p.add_argument("--duration", type=parse_duration, default="4h",
                    help="e.g. 30m, 4h, 24h")

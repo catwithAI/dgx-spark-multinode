@@ -24,6 +24,20 @@ DGX Spark (GB10) 上的大模型部署方案合集：单节点 / 双节点（Con
 
 - 跨模型评测：[`eval/`](eval)
 - 配套服务（open-webui / 代理层 / 共享 vLLM 插件）：[`services/`](services)
+- 生命周期编排（start / stop / switch / 看门狗）：[modelhub_cli](https://github.com/blade-hq/modelhub_cli)，配方在本仓库，编排在那边
+
+## 统一约定
+
+所有方案共用一套位置和端口，定义在 [`fleet.env.example`](fleet.env.example)，与 modelhub 的 `fleet.env` 同一套键名：
+
+| 项 | 值 | 说明 |
+|---|---|---|
+| 权重根目录 | `/home/ai/models/<name>` | 目录名 = 容器内 `/models/<name>`；compose 一律 `${MODELS_DIR:-/home/ai/models}:/models:ro` |
+| LLM API 端口 | `8888` | 所有 LLM 方案共用。同一台机同一时刻只跑一个模型，客户端只需换 `model` id |
+| 本仓库 checkout | `/home/ai/dgx-spark-multinode` | modelhub 的 `UPSTREAM_DIR` 指向 `models/<模型>/<方案>/upstream/`（gitignore，放第三方 kit 的 clone） |
+| 非 LLM 服务 | ComfyUI `8188`、bge `30010`、open-webui `30030`、代理 `30020/30021` | 各自固定，不与 8888 冲突 |
+
+目标机上旧位置（`/srv/models`、`~/ds4-dspark-2x`、`/opt/qwen38-sglang`、`~/gguf` 等）用 [`scripts/migrate-layout.sh`](scripts/migrate-layout.sh) 软链到新位置，先 dry-run 再 `--apply`。
 
 ## 双节点通用入口 (quick-start.sh)
 
@@ -68,7 +82,7 @@ docker logs -f --tail 50 vllm-spark-head        # 查看日志
 | 选项 | 说明 |
 |------|------|
 | `--image IMAGE` | 指定 Docker 镜像 (默认 ghcr.nju.edu.cn/bjk110/vllm-spark:v019-ngc2603) |
-| `--port PORT` | API 端口 (默认 30000) |
+| `--port PORT` | API 端口 (默认 8888) |
 | `--max-len LEN` | 最大上下文长度 (默认 8192) |
 | `--no-sync-model` | 跳过模型同步 |
 | `--no-sync-image` | 跳过镜像同步 |
@@ -99,7 +113,7 @@ docker logs -f --tail 50 vllm-spark-head        # 查看日志
 spark01 (head)                    spark02 (worker)
 +-----------------------+        +-----------------------+
 |  Ray Head (6379)      |        |  Ray Worker           |
-|  vLLM API (:30000)    |<------>|                       |
+|  vLLM API (:8888)    |<------>|                       |
 |  GB10 GPU             | RoCE   |  GB10 GPU             |
 |  TP rank 0            | 200G   |  TP rank 1            |
 +-----------------------+        +-----------------------+
@@ -138,7 +152,7 @@ models/gemma4-26b-a4b/presets/gemma4-26b-a4b.env         — Gemma 4 26B MoE (TP
 兼容 OpenAI 格式:
 
 ```bash
-curl http://192.168.130.16:30000/v1/chat/completions \
+curl http://192.168.130.16:8888/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "Qwen3___5-122B-A10B-NVFP4",
@@ -152,6 +166,8 @@ curl http://192.168.130.16:30000/v1/chat/completions \
 ```
 dgx-spark-multinode/
 ├── README.md
+├── fleet.env.example           # 统一约定：权重目录 / 端口 / checkout 位置 / fabric
+├── scripts/migrate-layout.sh   # 目标机旧位置 -> 新约定（软链）
 ├── quick-start.sh              # 双节点 NVFP4 TP=2 一键入口
 ├── runtime/                    # quick-start.sh 的容器运行时
 │   ├── docker-compose.yml      # vLLM head + worker 编排
@@ -161,16 +177,19 @@ dgx-spark-multinode/
 │
 ├── models/                     # ── 所有模型部署，按模型名分目录 ──
 │   │                           #    注：这里放的是部署方案，不是权重；
-│   │                           #    权重在目标机的 ~/models/ 下
+│   │                           #    权重在目标机的 /home/ai/models/ 下
+│   │                           #    <方案>/upstream/ 放第三方 kit 的 clone（gitignore）
 │   ├── deepseek-v4-flash/
 │   │   ├── README.md           #    两套方案对比 + 选型
 │   │   ├── vllm-dspark-2x-nvfp4/   # 双节点 vLLM + DSpark，1M 上下文
+│   │   ├── vllm-dspark-2x-vision/  # 同上，Vision-Exp 图片输入（modelhub ds4-vision）
 │   │   └── ds4-gguf-iq2-1x/        # 单节点 ds4 引擎 + IQ2 GGUF
 │   ├── glm-5.3-flash/          #    EXL3 4bpw + DFlash2，双节点 TP=2
 │   │   └── exl3-2x-entrpi/         # .8 head + .12 worker，524K 上下文
 │   ├── qwen3.5-122b-a10b/      #    INT4 AutoRound 单机 + MTP-2
 │   │   └── README.md · deploy/ docs/ scripts/ reports/ presets/
 │   ├── qwen3.5-35b-a3b/        #    NVFP4 单机，和 122B 互斥
+│   ├── qwen3.8-flash-next/     #    SGLang TP=2 PixelML 配方（modelhub qwen38）
 │   ├── qwen3.5-397b-a17b/      #    仅配置留档
 │   ├── laguna-s-2.1/
 │   ├── gemma4-26b-a4b/         #    仅配置留档

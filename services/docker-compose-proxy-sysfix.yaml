@@ -1,6 +1,6 @@
 # sysfix-proxy (System-message fix, 独立)
 # 用法: cd ~/lm_scripts && docker compose -f docker-compose-proxy-sysfix.yaml up -d
-# 端口: 30020 -> upstream http://localhost:30000 (vllm)
+# 端口: 30020 -> upstream http://localhost:8888 (vllm)
 
 services:
   sysfix:
@@ -10,7 +10,7 @@ services:
     network_mode: host
     environment:
       - PORT=30020
-      - UPSTREAM=http://localhost:30000
+      - UPSTREAM=http://localhost:8888
     volumes:
       - ./services/sysfix_proxy.py:/app/sysfix_proxy.py
     working_dir: /app

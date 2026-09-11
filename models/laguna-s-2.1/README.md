@@ -41,14 +41,14 @@ cd deploy && docker compose up -d
 docker compose logs -f            # 冷启加载 72GB + 构建投机栈，约 10 分钟
 ```
 
-`deploy/docker-compose.yml` 关键参数：`--trust-remote-code`（Laguna 自定义架构 `LagunaForCausalLM`）、`--speculative-config '{"model":".../DFlash-NVFP4","num_speculative_tokens":7}'`、`--max-model-len 32768`、prefix caching、`0.0.0.0:8000`。
+`deploy/docker-compose.yml` 关键参数：`--trust-remote-code`（Laguna 自定义架构 `LagunaForCausalLM`）、`--speculative-config '{"model":".../DFlash-NVFP4","num_speculative_tokens":7}'`、`--max-model-len 32768`、prefix caching、`0.0.0.0:8888`。
 
 ## API
 
 OpenAI 兼容，`model=laguna-s-2.1`：
 
 ```bash
-curl http://<host>:8000/v1/chat/completions \
+curl http://<host>:8888/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{"model":"laguna-s-2.1","messages":[{"role":"user","content":"写个快排"}],"max_tokens":1024}'
 ```

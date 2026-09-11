@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse, Response
 import uvicorn
 
-UPSTREAM = os.environ.get("UPSTREAM", "http://localhost:8000")
+UPSTREAM = os.environ.get("UPSTREAM", "http://localhost:8888")
 app = FastAPI()
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout,
@@ -139,4 +139,4 @@ async def proxy(path: str, request: Request):
                           media_type=resp.headers.get("content-type"))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "8080")))
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "30020")))

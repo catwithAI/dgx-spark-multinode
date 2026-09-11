@@ -15,7 +15,7 @@
 #   --dry-run         仅校验，不实际执行
 #   --stop            停止当前服务
 #   --status          查看服务状态
-#   --port PORT       API 端口 (默认 30000)
+#   --port PORT       API 端口 (默认 8888)
 #   --max-len LEN     最大上下文长度 (默认 8192)
 # ============================================================
 
@@ -39,7 +39,7 @@ FAST_IP_WORKER=""
 NCCL_IF=""
 NCCL_IF_WORKER=""
 GLOO_IF=""
-API_PORT=30000
+API_PORT=8888
 MAX_MODEL_LEN=131072
 MAX_NUM_SEQS=4
 GPU_MEM_UTIL=0.70

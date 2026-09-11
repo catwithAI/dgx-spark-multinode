@@ -10,7 +10,7 @@ Outputs a markdown report + raw JSON.
 
 Usage:
   python3 bench_llm.py \
-      --base http://192.168.130.12:30000 \
+      --base http://192.168.130.12:8888 \
       --model qwen3.5-122b-int4 \
       --out bench_report.md
 """
@@ -275,7 +275,7 @@ def render_report(meta, needle, latency, stress):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--base", default="http://192.168.130.12:30000",
+    p.add_argument("--base", default="http://192.168.130.12:8888",
                    help="Endpoint root (no /v1 suffix)")
     p.add_argument("--model", default="qwen3.5-122b-int4")
     p.add_argument("--out", default="bench_report.md")

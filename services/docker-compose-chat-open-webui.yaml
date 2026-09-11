@@ -1,6 +1,6 @@
 # open-webui (独立)
 # 用法: cd ~/lm_scripts && docker compose -f docker-compose-chat-open-webui.yaml up -d
-# 端口: 30030 -> 内部 8080; upstream http://localhost:30000/v1 (vllm)
+# 端口: 30030 -> 内部 8080; upstream http://localhost:8888/v1 (vllm)
 
 services:
   open-webui:
@@ -10,7 +10,7 @@ services:
     ports:
       - "30030:8080"
     environment:
-      - OPENAI_API_BASE_URL=http://host.docker.internal:30000/v1
+      - OPENAI_API_BASE_URL=http://host.docker.internal:8888/v1
       - OPENAI_API_KEY=none
       - ENABLE_OLLAMA_API=false
       - WEBUI_AUTH=false

@@ -1,5 +1,5 @@
 # Qwen3.8-27B on SGLang，DSpark 投机解码（single DGX Spark / GB10 / aarch64）
-# 目标机: 192.168.130.48 (box010)   端口: :8000   model id = qwen3.8-27b
+# 目标机: 192.168.130.48 (box010)   端口: :8888   model id = qwen3.8-27b
 # 方案出处: https://forums.developer.nvidia.com/t/qwen3-8-27b-at-34-38-tok-s-on-dgx-spark-open-source-one-command-setup-sglang-nvfp4-dspark/380257
 #
 # ⚠️ 镜像: DSPARK 算法只在这个补丁镜像里: lmsysorg/sglang@sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1
@@ -56,9 +56,9 @@ services:
       - --host
       - 0.0.0.0
       - --port
-      - "8000"
+      - "8888"
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3).status==200 else 1)"]
+      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8888/health',timeout=3).status==200 else 1)"]
       interval: 30s
       timeout: 5s
       retries: 40

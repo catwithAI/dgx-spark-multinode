@@ -4,9 +4,9 @@
 
 | 服务 | 文件 | 端口 | 上游 |
 |---|---|---|---|
-| open-webui | `docker-compose-chat-open-webui.yaml` | 30030 → 内部 8080 | `http://localhost:30000/v1` |
-| cc-proxy（Claude Code 代理） | `docker-compose-proxy-cc.yaml` + `services/cc_proxy.py` | 30021 | `http://localhost:30000/v1` |
-| sysfix-proxy（system message 修正） | `docker-compose-proxy-sysfix.yaml` + `services/sysfix_proxy.py` | 30020 | `http://localhost:30000` |
+| open-webui | `docker-compose-chat-open-webui.yaml` | 30030 → 内部 8080 | `http://localhost:8888/v1` |
+| cc-proxy（Claude Code 代理） | `docker-compose-proxy-cc.yaml` + `services/cc_proxy.py` | 30021 | `http://localhost:8888/v1` |
+| sysfix-proxy（system message 修正） | `docker-compose-proxy-sysfix.yaml` + `services/sysfix_proxy.py` | 30020 | `http://localhost:8888` |
 
 ## 共享 vLLM 插件
 

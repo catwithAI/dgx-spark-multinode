@@ -107,7 +107,7 @@ docker run -d --name vllm-qwen35 \
   vllm-qwen35-v2 \
   serve /models/Qwen3.5-122B-A10B-int4-AutoRound-Intel \
   --served-model-name qwen3.5-122b-int4 \
-  --port 30000 \
+  --port 8888 \
   --max-model-len 32768 \
   --gpu-memory-utilization 0.90 \
   --reasoning-parser qwen3 \
@@ -121,7 +121,7 @@ docker run -d --name vllm-qwen35 \
 
 ```bash
 # 健康检查
-curl http://localhost:30000/health
+curl http://localhost:8888/health
 
 # 查看日志
 docker logs -f --tail 50 vllm-qwen35
@@ -144,7 +144,7 @@ docker logs -f --tail 50 vllm-qwen35
 ### 文本对话
 
 ```bash
-curl http://localhost:30000/v1/chat/completions \
+curl http://localhost:8888/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "qwen3.5-122b-int4",
@@ -171,7 +171,7 @@ data = json.dumps({
 }).encode()
 
 req = urllib.request.Request(
-    "http://localhost:30000/v1/chat/completions",
+    "http://localhost:8888/v1/chat/completions",
     data=data,
     headers={"Content-Type": "application/json"}
 )

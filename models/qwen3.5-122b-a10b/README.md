@@ -51,7 +51,7 @@ qwen3.5-122b-a10b/
 
 ## 快速使用
 
-**前置**：模型 `Qwen3.5-122B-A10B-int4-AutoRound-Intel` 放在 `~/models/` 下（72GB），镜像 `vllm-qwen35-v2` 已就绪。
+**前置**：模型 `Qwen3.5-122B-A10B-int4-AutoRound-Intel` 放在 `/home/ai/models/` 下（72GB），镜像 `vllm-qwen35-v2` 已就绪。
 
 ```bash
 # 1. 部署（目标机器上）
@@ -63,12 +63,12 @@ ssh ai@<host> 'cd ~/lm_scripts && docker compose up -d'
 ssh ai@<host> 'docker ps --filter name=vllm-qwen35 --format "{{.Status}}"'
 
 # 3. 调用
-curl http://<host>:30000/v1/chat/completions \
+curl http://<host>:8888/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{"model":"qwen3.5-122b-int4","messages":[{"role":"user","content":"你好"}]}'
 
 # 4. 基准测试
-python3 scripts/bench_llm.py --base http://<host>:30000 --out reports/基准报告-latest.md
+python3 scripts/bench_llm.py --base http://<host>:8888 --out reports/基准报告-latest.md
 ```
 
 详见 [部署指南](./docs/部署指南.md) 和 [TTFT 瓶颈分析](./docs/TTFT瓶颈分析.md)。
@@ -77,11 +77,11 @@ python3 scripts/bench_llm.py --base http://<host>:30000 --out reports/基准报�
 
 | 节点 | IP | 状态 |
 |---|---|---|
-| spark-c915 | `192.168.130.12` | 运行中 · `http://192.168.130.12:30000/v1` |
+| spark-c915 | `192.168.130.12` | 运行中 · `http://192.168.130.12:8888/v1` |
 
 ## 关键参数速查
 
-- 端口：`30000`（host network）
+- 端口：`8888`（host network）
 - 模型名：`qwen3.5-122b-int4`
 - 上下文上限：**131072** (128K)
 - 显存预算：`--gpu-memory-utilization 0.90`（GB10 统一内存 128GB，约 101GB 被占）

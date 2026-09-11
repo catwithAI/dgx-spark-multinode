@@ -4,7 +4,7 @@
 model_compare.py — 对比两个 OpenAI 兼容 LLM 服务的性能与效果。
 
 对比对象（默认）:
-  A. DeepSeek-V4-Flash   @ http://192.168.130.12:8000/v1   (ds4-server)
+  A. DeepSeek-V4-Flash   @ http://192.168.130.12:8888/v1   (ds4-server)
   B. Qwen3.5-122B-A10B   @ http://192.168.130.45:30001/v1  (vLLM, INT4)
 
 测试维度:
@@ -27,7 +27,7 @@ import json, time, argparse, urllib.request, urllib.error, re, sys, statistics
 # ----------------------------------------------------------------------------
 # 改 base/model 指向你的端点; 多模型对比就在下面加条目
 MODELS = [
-    {"name": "Qwen3.8-27B", "base": "http://192.168.130.48:9001/v1",
+    {"name": "Qwen3.8-27B", "base": "http://192.168.130.48:8888/v1",
      "model": "qwen3.8-27b", "extra": {"chat_template_kwargs": {"enable_thinking": False}}},
 ]
 

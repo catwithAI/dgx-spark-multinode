@@ -31,7 +31,7 @@ cd deploy && docker compose up -d && docker compose logs -f    # torch.compile �
 bash scripts/smoke-test.sh 192.168.130.48 8000
 ```
 
-`deploy/docker-compose.yml` 关键参数：`--speculative-algorithm DSPARK`、`--speculative-draft-model-path .../RadixArk-Qwen3.8-27B-DSpark`、`--speculative-dspark-block-size 7`、`--mem-fraction-static 0.50`、`--attention-backend flashinfer`、`--enable-torch-compile`、`--max-mamba-cache-size 96`（混合线性注意力需要）、`0.0.0.0:8000`。
+`deploy/docker-compose.yml` 关键参数：`--speculative-algorithm DSPARK`、`--speculative-draft-model-path .../RadixArk-Qwen3.8-27B-DSpark`、`--speculative-dspark-block-size 7`、`--mem-fraction-static 0.50`、`--attention-backend flashinfer`、`--enable-torch-compile`、`--max-mamba-cache-size 96`（混合线性注意力需要）、`0.0.0.0:8888`。
 
 > **若镜像不支持 `DSPARK`**：改 `--speculative-algorithm EAGLE3`（换对应草稿模型），或直接用 [`../vllm-mtp-1x-nvfp4/`](../vllm-mtp-1x-nvfp4) 方案。
 
@@ -40,7 +40,7 @@ bash scripts/smoke-test.sh 192.168.130.48 8000
 OpenAI 兼容，`model=qwen3.8-27b`：
 
 ```bash
-curl http://192.168.130.48:8000/v1/chat/completions -H 'Content-Type: application/json' \
+curl http://192.168.130.48:8888/v1/chat/completions -H 'Content-Type: application/json' \
   -d '{"model":"qwen3.8-27b","messages":[{"role":"user","content":"你好"}],"max_tokens":256}'
 ```
 

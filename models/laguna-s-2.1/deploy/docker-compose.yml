@@ -1,6 +1,6 @@
 # Laguna-S-2.1-NVFP4 on vLLM，用 DFlash(EAGLE3 草稿模型)做投机解码
 # 目标机: 192.168.130.12 (DGX Spark / GB10 / aarch64)
-# 起服务:  docker compose up -d   →  OpenAI 接口 http://<host>:8000/v1
+# 起服务:  docker compose up -d   →  OpenAI 接口 http://<host>:8888/v1
 #          model id = laguna-s-2.1
 #
 # ⚠️ 内存: 主模型 NVFP4 ~72GB + KV，占用大半统一内存。启动前需先停掉 DS4
@@ -13,9 +13,9 @@ services:
     runtime: nvidia
     ipc: host                       # vLLM 需要大 /dev/shm，用 host IPC 最稳
     ports:
-      - "8000:8000"
+      - "8888:8888"
     volumes:
-      - /home/ai/models:/models:ro  # 模型只读挂载
+      - ${MODELS_DIR:-/home/ai/models}:/models:ro  # 模型只读挂载
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
@@ -37,9 +37,9 @@ services:
       - --host
       - 0.0.0.0
       - --port
-      - "8000"
+      - "8888"
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3).status==200 else 1)"]
+      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8888/health',timeout=3).status==200 else 1)"]
       interval: 30s
       timeout: 5s
       retries: 20

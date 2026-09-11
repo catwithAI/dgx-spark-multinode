@@ -3,7 +3,7 @@
 import sys, json, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:9001"
+BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8888"
 MODEL = sys.argv[2] if len(sys.argv) > 2 else "qwen3.8-27b"
 MAXTOK = int(sys.argv[3]) if len(sys.argv) > 3 else 256
 LEVELS = [1, 2, 4, 6, 8]

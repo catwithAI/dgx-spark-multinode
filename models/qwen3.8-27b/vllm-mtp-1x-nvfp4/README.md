@@ -27,7 +27,7 @@ cd deploy && docker compose up -d && docker compose logs -f    # 冷启 3–6 �
 bash scripts/smoke-test.sh 192.168.130.48 8000
 ```
 
-`deploy/docker-compose.yml` 关键参数：官方 MTP 投机(`--speculative-config mtp`)、**工具调用**(`--enable-auto-tool-choice --tool-call-parser qwen3_coder`)、思考解析(`--reasoning-parser qwen3`)、`--max-model-len 262144`(256k)、`--max-num-seqs 4`、prefix caching、`0.0.0.0:8000`。
+`deploy/docker-compose.yml` 关键参数：官方 MTP 投机(`--speculative-config mtp`)、**工具调用**(`--enable-auto-tool-choice --tool-call-parser qwen3_coder`)、思考解析(`--reasoning-parser qwen3`)、`--max-model-len 262144`(256k)、`--max-num-seqs 4`、prefix caching、`0.0.0.0:8888`。
 
 > **若镜像不支持 MTP**：删掉 compose 里 `--speculative-config` 两行即退到纯连续解码（功能不受影响，decode 略慢）。
 
@@ -36,7 +36,7 @@ bash scripts/smoke-test.sh 192.168.130.48 8000
 本配置**已开工具调用**（`--enable-auto-tool-choice --tool-call-parser qwen3_coder`）——agent 场景必须。实测正确返回结构化 `tool_calls`：
 
 ```bash
-curl http://192.168.130.48:8000/v1/chat/completions -H 'Content-Type: application/json' -d '{
+curl http://192.168.130.48:8888/v1/chat/completions -H 'Content-Type: application/json' -d '{
   "model": "qwen3.8-27b",
   "messages": [{"role":"user","content":"北京天气怎么样？"}],
   "tools": [{"type":"function","function":{
@@ -54,7 +54,7 @@ curl http://192.168.130.48:8000/v1/chat/completions -H 'Content-Type: applicatio
 OpenAI 兼容，`model=qwen3.8-27b`：
 
 ```bash
-curl http://192.168.130.48:8000/v1/chat/completions -H 'Content-Type: application/json' \
+curl http://192.168.130.48:8888/v1/chat/completions -H 'Content-Type: application/json' \
   -d '{"model":"qwen3.8-27b","messages":[{"role":"user","content":"你好"}],"max_tokens":256}'
 ```
 
