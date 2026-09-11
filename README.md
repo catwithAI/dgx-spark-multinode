@@ -55,7 +55,7 @@ overlay 不碰显存键。
 
 | 脚本 | 用途 |
 |---|---|
-| `scripts/fetch-upstream.sh` | 新盒子：按 `upstream.lock` 拉所有 kit 并套 overlay |
+| `scripts/fetch-upstream.sh` | 新盒子：按 `upstream.lock` 落所有 kit 并套 overlay。来源优先级：upstream/ 已存在（keeper kit 物料）> `KIT_DIR` > `KIT_TAR`（包内物料 tar）> `REPO/REF` > `SEED`（仅开发机兜底） |
 | `scripts/migrate-layout.sh` | 现有盒子：旧位置（`/srv/models`、`~/ds4-dspark-2x`、`/opt/qwen38-sglang`、`~/gguf`、`~/launch-glm53-*`）软链到新位置并套 overlay |
 | `scripts/cutover-modelhub.sh` | 切到 modelhub 编排：禁掉 `glm53-supervisor` / `ds4v-*supervisor`，清旧 project 的容器，重套 overlay（端口 8899/8000 → 8888） |
 

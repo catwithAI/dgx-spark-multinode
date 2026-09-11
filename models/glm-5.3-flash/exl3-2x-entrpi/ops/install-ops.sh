@@ -12,14 +12,19 @@ WORKER_HOST=${WORKER_HOST:-glm53-worker.local}
 peer(){ ssh -o StrictHostKeyChecking=no "$SSH_USER@$WORKER_HOST" "$@"; }
 WITH_SUPERVISOR=0; [ "${1:-}" = "--with-supervisor" ] && WITH_SUPERVISOR=1
 
-# 启动/预热脚本按统一约定放在本仓库 checkout 的 upstream/ 下（见根目录 fleet.env.example）；
-# 旧位置 ~/ 作为回退。
-UP=${RECIPES_ROOT:-/home/ai/dgx-spark-multinode}/models/glm-5.3-flash/exl3-2x-entrpi/upstream
+# 启动/预热脚本按统一约定放在本仓库 checkout 的 upstream/ 顶层（deploy/ 固化副本，由
+# scripts/apply-overlay.sh 安装）。这里先在 head 套一次 overlay 再检查，worker 侧要求已由
+# fetch-upstream/apply-overlay 铺好（modelhub 每次 start 也会在两台重套）。
+ROOT=${RECIPES_ROOT:-/home/ai/dgx-spark-multinode}
+SCHEME=$ROOT/models/glm-5.3-flash/exl3-2x-entrpi
+UP=$SCHEME/upstream
+[ -d "$UP" ] || { echo "缺少 $UP：先跑 $ROOT/scripts/fetch-upstream.sh $SCHEME" >&2; exit 1; }
+"$ROOT/scripts/apply-overlay.sh" "$SCHEME" >/dev/null
 for s in launch-glm53-vllm-tp2.sh glm53-warmup.sh; do
-  [ -x "$UP/$s" ] || [ -x "$HOME/$s" ] || { echo "缺少可执行依赖: $UP/$s（或 ~/$s）" >&2; exit 1; }
+  [ -x "$UP/$s" ] || { echo "缺少可执行依赖: $UP/$s（overlay 应已安装，检查 deploy/ 是否完整）" >&2; exit 1; }
 done
-peer "test -x '$UP/launch-glm53-vllm-tp2.sh' || test -x ~/launch-glm53-vllm-tp2.sh" \
-  || { echo "worker 缺少 launch-glm53-vllm-tp2.sh" >&2; exit 1; }
+peer "test -x '$UP/launch-glm53-vllm-tp2.sh'" \
+  || { echo "worker 缺少 $UP/launch-glm53-vllm-tp2.sh：先在 worker 跑 fetch-upstream.sh + apply-overlay.sh" >&2; exit 1; }
 
 echo "== head: 装脚本和配置 =="
 sudo install -m 0644 "$CFG"                 /etc/glm53-ops.env

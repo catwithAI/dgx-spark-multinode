@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Entrpi kit 读的是 upstream/.env；deploy/.env.entrpi 是本集群的填好值。
-# 同时把 kit install.sh 装到 ~/ 的启动/预热脚本链进 upstream/，供 modelhub 的 LAUNCH/WARMUP 使用。
+# 启动/预热脚本（launch-glm53-vllm-tp2.sh / glm53-warmup.sh）已固化在本目录（来源见文件头），
+# 每次 overlay 都 install 到 upstream/ 顶层供 modelhub 的 LAUNCH/WARMUP 使用——不再依赖 kit
+# install.sh 装到 ~/ 的副本，新盒子第一次 start 也能起。
 set -euo pipefail
 up=$1; here=$(cd "$(dirname "$0")" && pwd)
 # shellcheck source=../../../../scripts/lib-overlay.sh
@@ -8,8 +10,9 @@ up=$1; here=$(cd "$(dirname "$0")" && pwd)
 
 install -m 0644 "$here/.env.entrpi" "$up/.env"
 for s in launch-glm53-vllm-tp2.sh glm53-warmup.sh; do
-  [ -e "$up/$s" ] && continue
-  [ -x "$HOME/$s" ] && ln -s "$HOME/$s" "$up/$s"
+  # 旧布局留下的软链（指向 ~/）先清掉，换成固化副本
+  [ -L "$up/$s" ] && rm -f "$up/$s"
+  install -m 0755 "$here/$s" "$up/$s"
 done
 
 # 显存占比：launch-glm53-vllm-tp2.sh 读 GMU（--gpu-memory-utilization，kit 默认 0.85），
