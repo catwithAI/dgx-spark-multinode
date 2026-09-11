@@ -35,3 +35,5 @@ cd ~/dgx-spark-multinode/models/qwen3.8-flash-next/sglang-pixelml-2x/upstream
 ```
 
 `NCCL_IB_GID_INDEX` 每台不同且重启会变，上游 `.env` 里的值由 modelhub 每次启动前重写，不要手填。
+
+`upstream.lock` 指向种子机（.8）的 `/opt/qwen38-sglang`，新盒子用根目录 `scripts/fetch-upstream.sh` 拉。

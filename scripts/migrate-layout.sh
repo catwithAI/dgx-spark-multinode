@@ -28,8 +28,16 @@ link /home/ai/ds4-dspark-2x            "$RECIPES_ROOT/models/deepseek-v4-flash/v
 link /home/ai/ds4-dspark-2x-vision-src "$RECIPES_ROOT/models/deepseek-v4-flash/vllm-dspark-2x-vision/upstream"
 link /opt/qwen38-sglang                "$RECIPES_ROOT/models/qwen3.8-flash-next/sglang-pixelml-2x/upstream"
 
-echo "== GLM-5.3 Entrpi kit 散装脚本 -> $RECIPES_ROOT/models/glm-5.3-flash/exl3-2x-entrpi/upstream"
+echo "== GLM-5.3 Entrpi kit -> $RECIPES_ROOT/models/glm-5.3-flash/exl3-2x-entrpi/upstream"
+link /home/ai/glm-5.3-flash-exl3-2x-spark "$RECIPES_ROOT/models/glm-5.3-flash/exl3-2x-entrpi/upstream"
 link /home/ai/launch-glm53-vllm-tp2.sh "$RECIPES_ROOT/models/glm-5.3-flash/exl3-2x-entrpi/upstream/launch-glm53-vllm-tp2.sh"
 link /home/ai/glm53-warmup.sh          "$RECIPES_ROOT/models/glm-5.3-flash/exl3-2x-entrpi/upstream/glm53-warmup.sh"
 
+echo "== deploy/ 覆盖到 upstream/"
+for lock in "$RECIPES_ROOT"/models/*/*/upstream.lock; do
+  scheme=$(dirname "$lock")
+  [ -d "$scheme/upstream" ] || continue
+  echo "  apply-overlay $scheme"
+  [ $APPLY = 1 ] && "$RECIPES_ROOT/scripts/apply-overlay.sh" "$scheme"
+done
 [ $APPLY = 1 ] || echo "(dry-run；加 --apply 执行)"

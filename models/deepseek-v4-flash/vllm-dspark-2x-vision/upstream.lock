@@ -1,0 +1,4 @@
+# 上游 kit 来源。Vision 配方没有公开 git 仓库，只能从已验证的盒子 rsync。
+REPO=
+REF=
+SEED=ai@192.168.130.66:/home/ai/ds4-dspark-2x-vision-src/
