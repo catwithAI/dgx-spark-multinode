@@ -3,3 +3,5 @@ runtime/.cache/
 *.log
 eval/scripts/datasets/
 __pycache__/
+models/**/upstream/
+fleet.env

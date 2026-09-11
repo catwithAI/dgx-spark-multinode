@@ -1,6 +1,6 @@
 # Qwen3.5-122B-A10B INT4 AutoRound (Intel) - vLLM only
 # 用法: cd ~/lm_scripts && docker compose -f docker-compose-model-qwen35-122b-a10b-int4-vllm.yaml up -d
-# 端口: 30000
+# 端口: 8888
 # 权重: ~61GB; GPU mem util 0.80 (DGX Spark 统一内存 119GB)
 # 注意: 与 35B compose 互斥, 不能同时启动
 # 依赖 parser: services/qwen3_nothink_reasoning_parser_vllm.py
@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
     ipc: host
     ports:
-      - "30000:30000"
+      - "8888:8888"
     security_opt:
       - label=disable
     deploy:
@@ -31,7 +31,7 @@ services:
       - TORCHINDUCTOR_CACHE_DIR=/cache/torchinductor
       - TRITON_CACHE_DIR=/cache/triton
     volumes:
-      - /home/ai/models:/models
+      - ${MODELS_DIR:-/home/ai/models}:/models:ro
       - ./vllm_cache:/cache
       - ./services/qwen3_nothink_reasoning_parser_vllm.py:/custom/qwen3_nothink_reasoning_parser_vllm.py:ro
       - ./runai-bootstrap.sh:/runai-bootstrap.sh:ro
@@ -44,7 +44,7 @@ services:
       - --served-model-name
       - qwen3.5-122b-int4
       - --port
-      - "30000"
+      - "8888"
       - --max-model-len
       - "131072"
       - --gpu-memory-utilization
@@ -81,7 +81,7 @@ services:
       - --speculative-config
       - '{"method":"mtp","num_speculative_tokens":1}'
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:30000/health || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8888/health || exit 1"]
       interval: 3s        # 启动期被 docker 探到更快（之前 10s，节省 ~10s）
       timeout: 5s
       retries: 200        # interval 减小后保持总等待时间（200×3=600s）

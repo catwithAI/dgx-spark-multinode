@@ -5,7 +5,7 @@ Supports: text, tool_use, tool_result (as text), streaming + non-streaming.
 Does NOT support: images, prompt caching, computer-use, documents.
 
 Env:
-  UPSTREAM        OpenAI base URL, e.g. http://vllm:30000/v1
+  UPSTREAM        OpenAI base URL, e.g. http://localhost:8888/v1
   MODEL_OVERRIDE  if set, forces this model id on upstream regardless of
                   what the Anthropic client asks for (useful to map any
                   claude-* model name to qwen3.5-122b-int4).
@@ -16,7 +16,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 import uvicorn
 
-UPSTREAM = os.environ.get("UPSTREAM", "http://vllm:30000/v1").rstrip("/")
+UPSTREAM = os.environ.get("UPSTREAM", "http://localhost:8888/v1").rstrip("/")
 MODEL_OVERRIDE = os.environ.get("MODEL_OVERRIDE", "")
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout,
@@ -385,4 +385,4 @@ def health():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "8082")))
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "30021")))

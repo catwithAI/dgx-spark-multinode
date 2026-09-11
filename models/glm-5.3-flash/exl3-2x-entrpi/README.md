@@ -11,7 +11,7 @@
 | 投机 | DFlash2 MXFP8 drafter 1.2 GiB，k=7，与主模型一起 TP2 分片 |
 | 引擎 | Entrpi 的 vLLM fork + ExLlamaV3 kernel，发行镜像已含全部 sm_121 补丁 |
 | 上下文 | 默认 524K（KV 池 1,287,194 token），可切 1M |
-| 端口 | `8000`，OpenAI 兼容，模型名 `glm-5.3-flash` |
+| 端口 | `8888`，OpenAI 兼容，模型名 `glm-5.3-flash` |
 
 上游实测（单请求、greedy、5 次中位数）：结构化 71–72.4、JSON 51、数学 45、
 代码 42、散文 30 tok/s；TTFT 0.3–0.47 s；读文档 1,490 tok/s @133K。
@@ -24,7 +24,7 @@
 - [x] 权重下载：ModelScope 拉到 `.8`，光缆推到 `.12`（164 GiB / 96 s ≈ 1.7 GB/s）
 - [x] 权重校验：两台各 133 个文件 sha256 全过（120 shard 全对，见下方"校验"）
 - [x] drafter 下载：两台 `~/models/glm53-dflash2-mxfp8`
-- [x] **服务已上线** 2026-09-06：`http://192.168.130.8:8000/v1`，模型名 `glm-5.3-flash`，
+- [x] **服务已上线** 2026-09-06：`http://192.168.130.8:8888/v1`，模型名 `glm-5.3-flash`，
       `install.sh EXIT=0`，`max_model_len=524288`
 - [x] 单流速度实测（见下方"实测速度"）
 - [x] 进 [`../../../eval/`](../../../eval) 流程出质量分（2026-09-06，见下）
@@ -51,7 +51,7 @@ DFlash2 drafter 对中文的接受率明显低于英文，上游从没测过中�
 
 ## 质量评测（2026-09-06）
 
-用仓库的 [`eval/harness.py`](../../../eval/harness.py) 对准 `:8000`，每集 40 题、6 并发、思考关。
+用仓库的 [`eval/harness.py`](../../../eval/harness.py) 对准 `:8888`，每集 40 题、6 并发、思考关。
 完整报告在 [`../../../eval/reports/glm-5.3-flash/`](../../../eval/reports/glm-5.3-flash)。
 
 | 数据集 | 准确率 | 用时 |
@@ -111,8 +111,8 @@ cp <本仓库>/models/glm-5.3-flash/exl3-2x-entrpi/deploy/.env.entrpi .env
 ### 3. 用
 
 ```bash
-curl -s http://192.168.130.8:8000/health
-curl -s http://192.168.130.8:8000/v1/chat/completions \
+curl -s http://192.168.130.8:8888/health
+curl -s http://192.168.130.8:8888/v1/chat/completions \
   -H 'Content-Type: application/json' -d '{
   "model": "glm-5.3-flash",
   "messages": [{"role": "user", "content": "你好"}]

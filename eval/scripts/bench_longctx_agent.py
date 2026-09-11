@@ -8,7 +8,7 @@ unified diff（模拟一次编辑）再提问。会话单调增长，前缀完�
 量的是**流式首 token 时间**，不是整轮耗时——后者被 decode 长度污染。
 
 用法:
-  python3 bench_longctx_agent.py --base http://192.168.130.8:8000/v1 \
+  python3 bench_longctx_agent.py --base http://192.168.130.8:8888/v1 \
       --model glm-5.3-flash --ctx-files 60 --turns 20
   # 长时压测（跑够 60 分钟，中途不断追加 diff）
   python3 bench_longctx_agent.py --base ... --model ... --duration 3600

@@ -50,11 +50,11 @@ bash install.sh --start          # 或 --no-download 先只编译
 ## 启动服务
 
 ```bash
-# 满血 DSpark 投机解码栈，绑 0.0.0.0:8000
-~/.local/bin/ds4-serve --host 0.0.0.0 --port 8000 -c 32768
+# 满血 DSpark 投机解码栈，绑 0.0.0.0:8888
+~/.local/bin/ds4-serve --host 0.0.0.0 --port 8888 -c 32768
 
 # 更大上下文（内存够时）
-~/.local/bin/ds4-serve --host 0.0.0.0 --port 8000 -c 131072
+~/.local/bin/ds4-serve --host 0.0.0.0 --port 8888 -c 131072
 ```
 
 - `-c` = 上下文预算（并发请求共享）。KV 用 FP8 压缩，128K 约 3 GiB。
@@ -66,7 +66,7 @@ bash install.sh --start          # 或 --no-download 先只编译
 OpenAI 兼容，`model=deepseek-v4-flash`：
 
 ```bash
-curl http://<host>:8000/v1/chat/completions \
+curl http://<host>:8888/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"你好"}],"think":false,"max_tokens":256}'
 ```
@@ -87,7 +87,7 @@ curl http://<host>:8000/v1/chat/completions \
 
 - **统一内存互斥**：占 ~104 GiB，和同机其它大模型（如 vLLM-Qwen/Laguna）**不能同时跑**。切换前 `pkill ds4-server`。
 - apt 在部分机器有依赖冲突，装工具优先用纯 bash/curl 或独立 venv。
-- 源码 `~/code/ds4`、模型 `~/gguf`、启动器 `~/.local/bin/ds4-serve`。
+- 源码 `~/code/ds4`、模型 `/home/ai/models/DeepSeek-V4-Flash-GGUF`（旧位置 `~/gguf` 软链过渡）、启动器 `~/.local/bin/ds4-serve`。
 
 ## 参考
 

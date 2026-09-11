@@ -23,7 +23,7 @@ import os, re, csv, json, glob, random, argparse, urllib.request, threading, tim
 
 # 改 base/model 指向你的端点; 多模型对比就在下面加条目
 MODELS = [
-    {"name": "Qwen3.8-27B", "base": "http://192.168.130.48:9001/v1",
+    {"name": "Qwen3.8-27B", "base": "http://192.168.130.48:8888/v1",
      "model": "qwen3.8-27b", "extra": {}},
 ]
 DS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets")

@@ -8,9 +8,9 @@
 
 | 模型 | 部署 | 端点 | model id |
 |---|---|---|---|
-| DeepSeek-V4-Flash | [../deepseek-v4-flash/ds4-gguf-iq2-1x](../models/deepseek-v4-flash/ds4-gguf-iq2-1x) | `:8000` | `deepseek-v4-flash` |
+| DeepSeek-V4-Flash | [../deepseek-v4-flash/ds4-gguf-iq2-1x](../models/deepseek-v4-flash/ds4-gguf-iq2-1x) | `:8888` | `deepseek-v4-flash` |
 | DeepSeek-V4-Flash-0731 | [../deepseek-v4-flash/vllm-dspark-2x-nvfp4](../models/deepseek-v4-flash/vllm-dspark-2x-nvfp4) | `:8888` | `deepseek-v4-flash-0731`（未纳入本轮评测） |
-| Laguna-S-2.1-NVFP4 | [../laguna-s-2.1](../models/laguna-s-2.1) | `:8000` | `laguna-s2.1` |
+| Laguna-S-2.1-NVFP4 | [../laguna-s-2.1](../models/laguna-s-2.1) | `:8888` | `laguna-s2.1` |
 | Qwen3.5-122B-A10B | vLLM (INT4) | `:30001` | `qwen3.5-122b-int4` |
 
 > ⚠️ DS4 与 Laguna 在同一台机的统一内存里**互斥**，无法同时在线；因此三方并非全程同批。报告中会标注哪些是同批、哪些是历史参考。

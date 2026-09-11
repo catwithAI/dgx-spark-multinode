@@ -1,6 +1,6 @@
 # Qwen3.8-27B-NVFP4 on vLLM 0.27.1 · 官方 MTP 投机解码 · Function Call · 256k
-# 目标机: 192.168.130.48 (box010)   model id = qwen3.8-27b   端口 :8000
-# 起服务:  docker compose up -d   →  OpenAI 兼容 http://<host>:8000/v1
+# 目标机: 192.168.130.48 (box010)   model id = qwen3.8-27b   端口 :8888
+# 起服务:  docker compose up -d   →  OpenAI 兼容 http://<host>:8888/v1
 #
 # ★ 本配置为生产/agent 推荐配置：官方 MTP(接受率 44-49%) + 工具调用(function call) + 256k 上下文。
 #   实测: 单流 代码/数学 ~30 tok/s、并发稳到 8、工具调用正确返回结构化 tool_calls。
@@ -51,9 +51,9 @@ services:
       - --host
       - 0.0.0.0
       - --port
-      - "8000"
+      - "8888"
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3).status==200 else 1)"]
+      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8888/health',timeout=3).status==200 else 1)"]
       interval: 30s
       timeout: 5s
       retries: 30

@@ -1,6 +1,6 @@
 # cc-proxy (Claude Code proxy, 独立)
 # 用法: cd ~/lm_scripts && docker compose -f docker-compose-proxy-cc.yaml up -d
-# 端口: 30021 -> upstream http://localhost:30000/v1 (vllm)
+# 端口: 30021 -> upstream http://localhost:8888/v1 (vllm)
 
 services:
   cc-proxy:
@@ -10,7 +10,7 @@ services:
     network_mode: host
     environment:
       - PORT=30021
-      - UPSTREAM=http://localhost:30000/v1
+      - UPSTREAM=http://localhost:8888/v1
       - MODEL_OVERRIDE=qwen3.5-122b-int4
     volumes:
       - ./services/cc_proxy.py:/app/cc_proxy.py

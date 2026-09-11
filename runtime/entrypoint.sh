@@ -58,7 +58,7 @@ VLLM_CMD=(
     --max-num-batched-tokens "${MAX_NUM_BATCHED_TOKENS:-16384}"
     --trust-remote-code
     --host 0.0.0.0
-    --port "${HOST_PORT:-8000}"
+    --port "${HOST_PORT:-8888}"
     --dtype auto
     --enable-prefix-caching
 )

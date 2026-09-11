@@ -1,6 +1,6 @@
 # Qwen3.8-27B
 
-单节点 DGX Spark (GB10) 部署 **Qwen3.8-27B**（27B 稠密 + 混合线性/全注意力，多模态；架构 `Qwen3_5ForConditionalGeneration` / `model_type=qwen3_5`，与本仓库 Qwen3.5 系列同族）。两套投机解码方案，**共用同一份 NVFP4 主模型权重**，都用 `:8000`，**不能同时跑**。
+单节点 DGX Spark (GB10) 部署 **Qwen3.8-27B**（27B 稠密 + 混合线性/全注意力，多模态；架构 `Qwen3_5ForConditionalGeneration` / `model_type=qwen3_5`，与本仓库 Qwen3.5 系列同族）。两套投机解码方案，**共用同一份 NVFP4 主模型权重**，都用 `:8888`，**不能同时跑**。
 
 | 方案 | 目录 | 引擎 | 投机解码 | 单流 decode | 定位 |
 |---|---|---|---|---|---|

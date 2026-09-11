@@ -8,7 +8,7 @@
 |---|---|
 | 权重 | `~/models/Qwen3.5-35B-A3B-NVFP4-txn545`，~22 GB |
 | 镜像 | `vllm-qwen35-v2`（和 122B 共用，SM121 编译） |
-| 端口 | 30000 |
+| 端口 | 8888 |
 | 上下文 | 32768 |
 | `gpu-memory-utilization` | 0.60（统一内存 119 GB，给系统留余量） |
 | served model name | `qwen3.5-35b-a3b-nvfp4` |
