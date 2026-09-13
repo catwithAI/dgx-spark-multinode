@@ -1,7 +1,8 @@
-# 上游 kit 来源。Vision 配方没有公开 git 仓库。
-# 生产：走 blade-resource-keeper 物料 ds4-vision-kit（解到本目录 upstream/，fetch-upstream 视为已拉取），
-#       或装机时 KIT_TAR= 指向包内 tar。SEED 仅开发机兜底。
+# 上游 kit 来源。Vision 配方（tonyd2wild DSpark vision 落地 checkout）没有公开 git 仓库。
+# 生产：blade-resource-keeper 物料 ds4-vision-kit（ds4-vision-kit-20260911.tar.gz，已入 23:/data/nfs/kits/），
+#       keeper 解到本目录 upstream/，fetch-upstream 视为已拉取；或装机时 KIT_TAR= 指向包内 tar。
+# SEED 仅开发机兜底（.8 上那份已是 PORT=8888；66 于 2026-09-10 重装后已无此目录）。
 REPO=
 REF=
 KIT_TAR=
-SEED=ai@192.168.130.66:/home/ai/ds4-dspark-2x-vision-src/
+SEED=ai@192.168.130.8:/home/ai/ds4-dspark-2x-vision-src/
