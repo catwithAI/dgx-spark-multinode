@@ -18,6 +18,13 @@
 并发 10 路聚合 77 tok/s；关掉 drafter 的 agent 档 12–16 路聚合 88–103 tok/s。
 质量：math_500 91%、GPQA-diamond 70%、133K 文档检索 10/10。
 
+## 启动 / 预热脚本的来源（2026-09-11 起固化在 deploy/）
+
+`deploy/launch-glm53-vllm-tp2.sh`、`deploy/glm53-warmup.sh` 是 Entrpi kit v2.3-tier1 的原件（来源与 sha256 见文件头），
+仅把默认端口从 8000 改为集群约定的 8888。`deploy/overlay.sh` 每次 install 到 `upstream/` 顶层，modelhub 的
+`LAUNCH`/`WARMUP` 指向那里；不再依赖 kit `install.sh` 装到 `~/` 的副本，新盒子第一次 `modelhub start glm53` 就能起。
+显存 `GMU` 仍由 overlay 按角色写进各机 `~/.glm53-serve.env`（见根 README「统一约定」）。
+
 ## 当前进度
 
 - [x] 选型：四条路线横评，定 Entrpi EXL3 4bpw

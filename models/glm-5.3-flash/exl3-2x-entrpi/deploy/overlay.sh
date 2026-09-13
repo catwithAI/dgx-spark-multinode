@@ -1,11 +1,43 @@
 #!/usr/bin/env bash
 # Entrpi kit 读的是 upstream/.env；deploy/.env.entrpi 是本集群的填好值。
-# 同时把 kit install.sh 装到 ~/ 的启动/预热脚本链进 upstream/，供 modelhub 的 LAUNCH/WARMUP 使用。
+# 启动/预热脚本（launch-glm53-vllm-tp2.sh / glm53-warmup.sh）已固化在本目录（来源见文件头），
+# 每次 overlay 都 install 到 upstream/ 顶层供 modelhub 的 LAUNCH/WARMUP 使用——不再依赖 kit
+# install.sh 装到 ~/ 的副本，新盒子第一次 start 也能起。
 set -euo pipefail
 up=$1; here=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=../../../../scripts/lib-overlay.sh
+. "$here/../../../../scripts/lib-overlay.sh"
+
 install -m 0644 "$here/.env.entrpi" "$up/.env"
 for s in launch-glm53-vllm-tp2.sh glm53-warmup.sh; do
-  [ -e "$up/$s" ] && continue
-  [ -x "$HOME/$s" ] && ln -s "$HOME/$s" "$up/$s"
+  # 旧布局留下的软链（指向 ~/）先清掉，换成固化副本
+  [ -L "$up/$s" ] && rm -f "$up/$s"
+  install -m 0755 "$here/$s" "$up/$s"
 done
+
+# 显存占比：launch-glm53-vllm-tp2.sh 读 GMU（--gpu-memory-utilization，kit 默认 0.85），
+# 来源是每台各自的 ~/.glm53-serve.env（`: "${GMU:=x}"` 写法，命令行 env 优先）。
+# 两台值不同，所以写本机这份，不写 upstream/.env（launch 不读它）。
+# 注意 modelhub 的 glm53/start.sh knobs() 不能再传 GMU，否则两台被同一个值盖掉。
+if [ -n "${MH_GPU_MEM_UTIL:-}" ]; then
+  ov_require_fraction "$MH_GPU_MEM_UTIL"
+  # launch 脚本是 `[[ -f "$GLM53_ENV" ]] && . "$GLM53_ENV"` 条件 source：文件不存在（新盒子、kit
+  # install.sh 没生成）时会静默用 kit 默认 0.85，正好违反 head 0.78 / worker 0.90 的硬要求。
+  # 所以不存在就创建（只含 GMU 一行，其余键让 launch 走自己的默认），存在则只改/追加 GMU 行。
+  serve_env=${GLM53_ENV:-$HOME/.glm53-serve.env}
+  if [ -f "$serve_env" ]; then
+    if grep -q '^: "${GMU' "$serve_env"; then
+      sed -i "s|^: \"\${GMU[:]*=.*|: \"\${GMU:=${MH_GPU_MEM_UTIL}}\"|" "$serve_env"
+    else
+      printf ': "${GMU:=%s}"\n' "$MH_GPU_MEM_UTIL" >> "$serve_env"
+    fi
+    echo "overlay(glm53): $serve_env  GMU=${MH_GPU_MEM_UTIL} (${MH_ROLE:-?})"
+  else
+    mkdir -p "$(dirname "$serve_env")"
+    printf '# 由 dgx-spark-multinode deploy/overlay.sh 生成（modelhub 每次 start 前刷新）；kit install.sh 会用完整版覆盖，GMU 行随后再被写回。\n: "${GMU:=%s}"\n' \
+      "$MH_GPU_MEM_UTIL" > "$serve_env"
+    chmod 0644 "$serve_env"
+    echo "overlay(glm53): $serve_env 不存在，已创建并写入 GMU=${MH_GPU_MEM_UTIL} (${MH_ROLE:-?})"
+  fi
+fi
 true
