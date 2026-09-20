@@ -20,9 +20,42 @@ backoff=60
 log(){ echo "$(date -Is) [sup] $*"; }
 peer(){ ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$SSH_USER@$WORKER_RAIL_IP" "$@"; }
 
+# 引擎「忙但活着」判据。长 prefill（DS4 1M ≈ 15 分钟）期间引擎满负荷，1 token 探针排在队尾必超时，
+# 连续 3 次就被当成卡死误杀好实例（2026-09-20 压测 4 次实录）。所以探针前先看 vLLM /metrics：
+# 有请求在跑/排队、且 token 计数在推进 → 忙但活着，不算失败。
+# 卡死（worker 被杀、NCCL 死锁）时请求也卡在 running，但计数不动：BUSY_STALL_SEC 内无推进才放行给探针判死。
+BUSY_STALL_SEC=${BUSY_STALL_SEC:-600}
+_busy_tok=-1; _busy_move=$(date +%s); _busy_logged=0
+# 输出 "running waiting tokens"；/metrics 不可达（引擎没起/已崩）返回非零
+engine_load(){
+  local m; m=$(curl -s -m 5 "http://127.0.0.1:$PORT/metrics" 2>/dev/null) || return 1
+  [ -n "$m" ] || return 1
+  printf '%s\n' "$m" | awk '
+    /^vllm:num_requests_running[{ ]/   {r+=$NF}
+    /^vllm:num_requests_waiting[{ ]/   {w+=$NF}
+    /^vllm:prompt_tokens_total[{ ]/    {p+=$NF}
+    /^vllm:generation_tokens_total[{ ]/{g+=$NF}
+    END{printf "%d %d %d\n", r, w, p+g}'
+}
+engine_busy_alive(){
+  local r w t now; now=$(date +%s)
+  read -r r w t <<<"$(engine_load)"
+  [ -n "${t:-}" ] || return 1
+  if [ $((r+w)) -eq 0 ]; then _busy_tok=$t; _busy_move=$now; return 1; fi   # 引擎空闲：探针失败就是真失败
+  if [ "$t" -ne "$_busy_tok" ]; then _busy_tok=$t; _busy_move=$now; fi      # 计数动了 = 有推进
+  if [ $((now - _busy_move)) -lt "$BUSY_STALL_SEC" ]; then
+    if [ $((now - _busy_logged)) -ge 300 ]; then
+      log "引擎处理请求中（running=$r waiting=$w，${BUSY_STALL_SEC}s 内有推进），不判失败"; _busy_logged=$now
+    fi
+    return 0
+  fi
+  return 1
+}
+
 healthy(){
   peer "docker ps -q --filter name=$CONTAINER --filter status=running" 2>/dev/null | grep -q . || return 1
   docker ps -q --filter "name=$CONTAINER" --filter status=running | grep -q . || return 1
+  engine_busy_alive && return 0
   curl -s -m "$PROBE_TIMEOUT" "http://127.0.0.1:$PORT/v1/chat/completions" \
     -H 'Content-Type: application/json' \
     -d "{\"model\":\"$MODEL_ID\",\"messages\":[{\"role\":\"user\",\"content\":\"ok\"}],\"max_tokens\":1,\"temperature\":0}" \
