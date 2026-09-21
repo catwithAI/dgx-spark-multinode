@@ -20,11 +20,13 @@ backoff=60
 log(){ echo "$(date -Is) [sup] $*"; }
 peer(){ ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$SSH_USER@$WORKER_RAIL_IP" "$@"; }
 
-# 引擎「忙但活着」判据。长 prefill（DS4 1M ≈ 15 分钟）期间引擎满负荷，1 token 探针排在队尾必超时，
-# 连续 3 次就被当成卡死误杀好实例（2026-09-20 压测 4 次实录）。所以探针前先看 vLLM /metrics：
-# 有请求在跑/排队、且 token 计数在推进 → 忙但活着，不算失败。
-# 卡死（worker 被杀、NCCL 死锁）时请求也卡在 running，但计数不动：BUSY_STALL_SEC 内无推进才放行给探针判死。
-BUSY_STALL_SEC=${BUSY_STALL_SEC:-600}
+# 引擎「忙但活着」判据。长 prefill（DS4 1M ≈ 871s 实测）期间引擎满负荷，1 token 探针排在队尾必超时，
+# 连续 3 次就被当成卡死误杀好实例（2026-09-20 压测 4 次实录）。所以探针前先看引擎是否在处理请求：
+# 「/metrics 有请求在跑/排队」且「没命中死亡标志」→ 忙但活着，不算失败。
+# 实测（2026-09-21）：prefill 期间 vllm token 计数与引擎统计行都不动（prompt/generation 计数到请求结束才累加），
+# 没有可用的 prefill 进度信号，所以 prefill 靠时间上限兜底；decode 阶段用日志里近 90s 的 generation throughput>0 当进度。
+#   BUSY_STALL_SEC：连续这么久既没有 token 计数变化、也没有 decode 吞吐，才放行给探针判死（默认 1800s ≈ 1M prefill 的 2 倍）
+BUSY_STALL_SEC=${BUSY_STALL_SEC:-1800}
 _busy_tok=-1; _busy_move=$(date +%s); _busy_logged=0
 # 输出 "running waiting tokens"；/metrics 不可达（引擎没起/已崩）返回非零
 engine_load(){
@@ -37,15 +39,24 @@ engine_load(){
     /^vllm:generation_tokens_total[{ ]/{g+=$NF}
     END{printf "%d %d %d\n", r, w, p+g}'
 }
+# 已知死亡标志（同 log_progressing）：命中说明引擎已崩/worker 失联，不能因为 /metrics 还显示 running 就当活着
+engine_dead_marker(){
+  docker logs --tail 5 "$CONTAINER" 2>&1 | grep -qE "No available shared memory broadcast block|EngineDeadError|EngineCore encountered an issue|Application shutdown complete"
+}
+# decode 阶段：近 90s 内有 generation throughput>0 的统计行 = 在出 token
+engine_decoding(){
+  docker logs --since 90s "$CONTAINER" 2>&1 | grep -a 'Avg generation throughput' | grep -aqv 'generation throughput: 0\.0 tokens/s'
+}
 engine_busy_alive(){
   local r w t now; now=$(date +%s)
   read -r r w t <<<"$(engine_load)"
   [ -n "${t:-}" ] || return 1
   if [ $((r+w)) -eq 0 ]; then _busy_tok=$t; _busy_move=$now; return 1; fi   # 引擎空闲：探针失败就是真失败
-  if [ "$t" -ne "$_busy_tok" ]; then _busy_tok=$t; _busy_move=$now; fi      # 计数动了 = 有推进
+  engine_dead_marker && return 1
+  if [ "$t" -ne "$_busy_tok" ] || engine_decoding; then _busy_tok=$t; _busy_move=$now; fi   # 有推进
   if [ $((now - _busy_move)) -lt "$BUSY_STALL_SEC" ]; then
     if [ $((now - _busy_logged)) -ge 300 ]; then
-      log "引擎处理请求中（running=$r waiting=$w，${BUSY_STALL_SEC}s 内有推进），不判失败"; _busy_logged=$now
+      log "引擎处理请求中（running=$r waiting=$w，已 $((now - _busy_move))s 无完成/无 decode 输出，上限 ${BUSY_STALL_SEC}s），不判失败"; _busy_logged=$now
     fi
     return 0
   fi
