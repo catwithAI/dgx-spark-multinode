@@ -4,24 +4,35 @@ GLM-5.3-Flash（320B MoE / 18B 激活，zai-org）在 DGX Spark 上的部署。
 FP8 原始权重约 328 GiB，单台 Spark 只有 128 GiB 统一内存，所以**必须量化**，
 两台 TP=2 才是能兼顾质量和速度的档位。
 
-本仓库采用 **[`exl3-2x-entrpi/`](exl3-2x-entrpi)**：EXL3 4bpw + DFlash2 投机，
+本仓库现役是 **[`exl3-2x-entrpi/`](exl3-2x-entrpi)**：EXL3 4bpw + DFlash2 投机，
 双节点 TP=2（`.8` head + `.12` worker）。选它的原因见下。
+
+另有备选栈 **[`exl3-2x-miaai/`](exl3-2x-miaai)**（2026-09-22 进仓库，未实机装过）：
+同一份权重、同一个 drafter，换 MiaAI-Lab 的引擎 overlay。选型时它输在 decode，
+但之后几轮内核工作（E2/E3 fat-expert prefill、adaptive-k、dense FP8）让它的
+prefill 和**散文 decode** 反超，而散文正是 Entrpi 那套本地实测掉得最狠的一块
+（中文散文只有 14.9 tok/s）。值得 A/B，细节见该目录 README。
 
 ## 路线对比（都是 2026-09 前后社区在 GB10 上跑出来的）
 
 | 路线 | 节点 | 权重 | 结构化 decode | 散文 decode | TTFT | 上下文 |
 |---|---|---|---|---|---|---|
 | **EXL3 4bpw + DFlash2（Entrpi）** ← 本仓库选型 | 2 | EXL3 4bpw 164 GiB | **72.4** tok/s | **27.4** tok/s | **0.43–0.47 s** | 524K 默认，可开 1M |
-| EXL3 4bpw + DFlash2（MiaAI-Lab） | 2 | 同一份 EXL3 4bpw | 61.7–62.9 tok/s | 26.9 tok/s | ~0.72 s | 900K |
+| EXL3 4bpw + DFlash2（MiaAI-Lab）← 备选，已进仓库 | 2 | 同一份 EXL3 4bpw | 62.9 tok/s | **36.1** tok/s（2026-09-17，开 adaptive-k + dense FP8） | 0.33 s | 850K（E3 下 1M 装不进） |
 | SGLang + DFlash2 | 2 | NVFP4 | 29.4（代码） | 23.4 tok/s | — | 131K |
 | vLLM + NVFP4 + MTP | 2 | NVFP4 182 GiB | 21.8 tok/s | — | 0.29 s | 262K |
 | EXL3 2.05bpw 单机 | 1 | 85 GiB | 64 tok/s | 25 tok/s | — | 262K |
 
 - **为什么不是单机 2.05bpw**：数字好看，但 2-bit 与全精度 top-1 一致率只有 88.9%，
   论坛里多人报"复杂任务进死循环 / 并发时挂住"。我们要跑评测和真实业务，质量不能这么让。
-- **为什么不是 MiaAI-Lab**：同一份权重、同一个 drafter，两个栈独立做出来的。
-  Entrpi 结构化快 17%、TTFT 快约 40%，同预算下 KV 池大 46%（1,435,070 vs 982,612 token）。
-  论坛原帖里两边用户的结论也是 Entrpi 在 PP 和 TG 上都更快。
+- **为什么不是 MiaAI-Lab**（2026-09-06 的判断，**现已部分过时**）：同一份权重、
+  同一个 drafter，两个栈独立做出来的。当时 Entrpi 结构化快 17%、TTFT 快约 40%，
+  同预算下 KV 池大 46%（1,435,070 vs 982,612 token）。
+  之后上游那边推了 E2/E3 fat-expert prefill（冷 prefill +37–45%）、adaptive-k
+  和 dense FP8（散文 decode +13–21% / +12–19%），2026-09-17 报的散文是
+  36.1 tok/s，比 Entrpi 的 27.4 高。结构化仍是 Entrpi 领先（72.4 vs 62.9）。
+  所以现在是**看负载**：结构化 / 代码走 Entrpi，散文和长 prefill 可能该走
+  MiaAI-Lab —— 留在 [`exl3-2x-miaai/`](exl3-2x-miaai) 等实机 A/B 定论。
 - **为什么不是 vLLM NVFP4 / SGLang**：这两条是 day-0 抢跑的路线，慢一半以上，
   且需要自己维护七八个 sm_121 补丁。Entrpi 把补丁都打进发行镜像了。
 
