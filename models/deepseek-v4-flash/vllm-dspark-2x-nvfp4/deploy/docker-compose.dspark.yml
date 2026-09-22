@@ -77,6 +77,14 @@ services:
       NCCL_IB_DISABLE: "${NCCL_IB_DISABLE:-0}"
       NCCL_IB_HCA: "${NCCL_IB_HCA}"
       NCCL_SOCKET_IFNAME: "${NCCL_SOCKET_IFNAME}"
+      # vLLM 分布式初始化除了 NCCL（GPU 通信）还有一个 CPU 侧 Gloo ProcessGroup，
+      # 不认 NCCL_SOCKET_IFNAME；不绑网卡时默认走主机名解析出的管理网地址。断网/
+      # 管理网不可达时 Gloo 连管理网 IP 被拒 → "Gloo connectFullMesh failed" →
+      # Engine core initialization failed → 容器 ~20s 退出（实测坑：客户断网现场
+      # 66/57 死循环拉不起来）。让 Gloo 跟 NCCL 走同一块光纤网卡，双机通信全程
+      # 不依赖管理网。需与 cluster-ops/rail.sh 的多网卡同 IP 清理配合（否则同 IP
+      # 挂两块网卡，握手能建立却永久卡死）。
+      GLOO_SOCKET_IFNAME: "${NCCL_SOCKET_IFNAME}"
       NCCL_IB_GID_INDEX: "${NCCL_IB_GID_INDEX:-}"
       NCCL_CROSS_NIC: "${NCCL_CROSS_NIC:-1}"
       NCCL_CUMEM_ENABLE: "${NCCL_CUMEM_ENABLE:-0}"
