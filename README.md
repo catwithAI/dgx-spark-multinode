@@ -11,6 +11,7 @@ DGX Spark (GB10) 上的大模型部署方案合集：单节点 / 双节点（Con
 | **DeepSeek-V4-Flash** | [`models/deepseek-v4-flash/`](models/deepseek-v4-flash) | vLLM + DSpark + NVFP4 KV | 2 | 1M | 69–85 tok/s |
 | | | ds4 引擎 + IQ2 GGUF | 1 | 32K–512K | ~38 tok/s |
 | **GLM-5.3-Flash** | [`models/glm-5.3-flash/`](models/glm-5.3-flash) | EXL3 4bpw + DFlash2 投机（Entrpi） | 2 | 524K–1M | 30–72 tok/s（待实测） |
+| | | 同上，MiaAI-Lab 栈（备选，待 A/B） | 2 | 512K–850K | 散文更快、prefill 更快 |
 | **Qwen3.5-122B-A10B** | [`models/qwen3.5-122b-a10b/`](models/qwen3.5-122b-a10b) | vLLM INT4 AutoRound + MTP-2 | 1 | 128K | 38–46 tok/s |
 | | | vLLM NVFP4 TP=2（`quick-start.sh`） | 2 | 32K | ~17 tok/s |
 | **Qwen3.5-35B-A3B** | [`models/qwen3.5-35b-a3b/`](models/qwen3.5-35b-a3b) | vLLM NVFP4 | 1 | 32K | ~30 tok/s |
@@ -205,7 +206,8 @@ dgx-spark-multinode/
 │   │   ├── vllm-dspark-2x-vision/  # 同上，Vision-Exp 图片输入（modelhub ds4-vision）
 │   │   └── ds4-gguf-iq2-1x/        # 单节点 ds4 引擎 + IQ2 GGUF
 │   ├── glm-5.3-flash/          #    EXL3 4bpw + DFlash2，双节点 TP=2
-│   │   └── exl3-2x-entrpi/         # .8 head + .12 worker，524K 上下文
+│   │   ├── exl3-2x-entrpi/         # 现役：.8 head + .12 worker，524K 上下文
+│   │   └── exl3-2x-miaai/          # 备选：同权重不同引擎栈，待 A/B
 │   ├── qwen3.5-122b-a10b/      #    INT4 AutoRound 单机 + MTP-2
 │   │   └── README.md · deploy/ docs/ scripts/ reports/ presets/
 │   ├── qwen3.5-35b-a3b/        #    NVFP4 单机，和 122B 互斥
